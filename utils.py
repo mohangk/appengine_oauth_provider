@@ -1,4 +1,8 @@
 import oauth
+from stores import GAEOAuthDataStore
+
+#to be moved to settings
+OAUTH_SIGNATURE_METHODS = ['plaintext', 'hmac-sha1']
 
 def initialize_server_request(request):
     """Shortcut for initialization."""

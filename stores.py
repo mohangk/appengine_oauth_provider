@@ -1,6 +1,7 @@
 import logging
 from urlparse import urlparse
 
+#to be moved to settings
 OAUTH_BLACKLISTED_HOSTNAMES = []
 
 import oauth
