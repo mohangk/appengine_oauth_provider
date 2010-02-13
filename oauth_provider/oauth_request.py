@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-#
-# The verifier is returned after verifying and is  
-# passed back when retrieving the access tokens
-#
 import logging
 
 from google.appengine.ext.webapp import RequestHandler
@@ -11,7 +6,7 @@ from google.appengine.api import users
 import oauth
 
 from stores import check_valid_callback
-from utils import initialize_server_request
+from utils import initialize_server_request, send_oauth_error
 
 REQUEST_TOKEN_URL = '/request_token'
 ACCESS_TOKEN_URL = '/access_token'
@@ -19,34 +14,12 @@ AUTHORIZATION_URL = '/authorize'
 CALLBACK_URL = '/request_token_ready'
 RESOURCE_URL = '/protected_resource'
 
-#to be moved to settings 
-OAUTH_REALM_KEY_NAME = 'http://events.example.net/'
-
-
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-
-def set_trace():
-  import pdb, sys
-  warningger = pdb.Pdb(stdin=sys.__stdin__,
-      stdout=sys.__stdout__)
-  warningger.set_trace(sys._getframe().f_back)
 
 
 class OAuthRequestHandler(RequestHandler):
     """HTTP request handler with OAuth support."""
-    
-    # example way to send an oauth error
-    def send_oauth_error(self, err=None):
-        # send a 401 error
-        self.response.clear()
-        self.response.set_status(401, str(err.message))
-        # return the authenticate header
-        header = oauth.build_authenticate_header(realm=OAUTH_REALM_KEY_NAME)
-        for k, v in header.iteritems():
-            self.response.headers.add_header(k, v)
-        return
-
     def get(self, *args):
         logger.warning("!!!START REQUEST!!!")
         """Handler method for OAuth GET requests."""   
@@ -57,7 +30,8 @@ class OAuthRequestHandler(RequestHandler):
             
             oauth_server, oauth_request = initialize_server_request(self.request)
             if oauth_server is None:
-                return self.send_oauth_error(oauth.OAuthError(('Invalid request parameters.')))
+                send_oauth_error(oauth.OAuthError('Invalid request parameters.'), self.response)
+                return
             else:
                 logger.warning("!!!OAuth Params: %s"%oauth_request.parameters)
                 
@@ -70,7 +44,8 @@ class OAuthRequestHandler(RequestHandler):
                 self.response.out.write(token.to_string())
             except oauth.OAuthError, err:
                 logger.exception("Error when trying to do a request_token")
-                self.send_oauth_error(err)
+                send_oauth_error(err, self.response)
+                return
             logger.warning("!!!End request")
             return 
 
@@ -81,7 +56,7 @@ class OAuthRequestHandler(RequestHandler):
             # get the request token
             oauth_server, oauth_request = initialize_server_request(self.request)
             if oauth_server is None:
-                return self.send_oauth_error(oauth.OAuthError(('Invalid request parameters.')))
+                return send_oauth_error(oauth.OAuthError('Invalid request parameters.'), self.response)
             else:
                 logger.warning("!!!OAuth Params: %s"%oauth_request.parameters)
             try:
@@ -89,16 +64,16 @@ class OAuthRequestHandler(RequestHandler):
                 token = oauth_server.fetch_request_token(oauth_request)
             except oauth.OAuthError, err:
                 logger.exception("Failed accessing request token")
-                return self.send_oauth_error((err))
+                return send_oauth_error(err, self.response)
             try:
                 # get the request callback, though there might not be one if this is OAuth 1.0a
                 callback = oauth_server.get_callback(oauth_request)
                 
                 # OAuth 1.0a: this parameter should not be present on this version
                 if token.callback_confirmed:
-                    return self.send_oauth_error(oauth.OAuthError(("Cannot specify oauth_callback at authorization step for 1.0a protocol")))
+                    return send_oauth_error(oauth.OAuthError("Cannot specify oauth_callback at authorization step for 1.0a protocol"), self.response)
                 if not check_valid_callback(callback):
-                    return self.send_oauth_error(oauth.OAuthError(("Invalid callback URL")))
+                    return send_oauth_error(oauth.OAuthError("Invalid callback URL"), self.response)
             except oauth.OAuthError,err:
                 callback = None
                 
@@ -140,7 +115,7 @@ class OAuthRequestHandler(RequestHandler):
             
             except oauth.OAuthError, err:
                 logger.exception("Error when trying to do an authorization")
-                self.send_oauth_error(err)
+                send_oauth_error(err, self.response)
             logger.warning("!!!End request")
             return
 
@@ -150,7 +125,7 @@ class OAuthRequestHandler(RequestHandler):
 
             oauth_server, oauth_request = initialize_server_request(self.request)
             if oauth_server is None:
-                return self.send_oauth_error(oauth.OAuthError(('Invalid request parameters.')))
+                return send_oauth_error(oauth.OAuthError('Invalid request parameters.'), self.response)
             else:
                 logger.warning("!!!OAuth Params: %s"%oauth_request.parameters)
             
@@ -160,14 +135,14 @@ class OAuthRequestHandler(RequestHandler):
                 
                 if token == None:
                     logger.warning("!!! oauth_server.fetch_access_token returning None")
-                    self.send_oauth_error(oauth.OAuthError("Cannot find corresponding access token."))
+                    send_oauth_error(oauth.OAuthError("Cannot find corresponding access token."), self.response)
                     return
                 # send okay response
                 self.response.set_status(200, 'OK')
                 # return the token
                 self.response.out.write(token.to_string())
             except oauth.OAuthError, err:
-                self.send_oauth_error(err)
+                send_oauth_error(err, self.response)
             logger.warning("!!!End request")
 
             return

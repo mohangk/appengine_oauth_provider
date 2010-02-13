@@ -4,7 +4,9 @@
 import wsgiref.handlers
 from google.appengine.ext import webapp
 import django.utils.simplejson as simplejson
-import oauth_request
+from oauth_provider import oauth_request
+
+from oauth_provider.decorators import oauth_required
 
 import logging
 logger = logging.getLogger()
@@ -29,8 +31,9 @@ class TomboyApiPublicHandler(webapp.RequestHandler):
         logger.warning("!!!End TomboyApi request")
     
         return
-        
+
 class TomboyApiPrivateHandler(webapp.RequestHandler):
+    @oauth_required  
     def get(self,user):
         logger.warning("!!!Start TomboyPrivateApi request %s"%(user))
         self.response.out.write("""

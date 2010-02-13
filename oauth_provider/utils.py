@@ -1,22 +1,21 @@
 import oauth
 from stores import GAEOAuthDataStore
+from google.appengine.ext.webapp import Response
 
 #to be moved to settings
 OAUTH_SIGNATURE_METHODS = ['plaintext', 'hmac-sha1']
 
+#to be moved to settings 
+OAUTH_REALM_KEY_NAME = 'http://events.example.net/'
+
 def initialize_server_request(request):
     """Shortcut for initialization."""
-    # Django converts Authorization header in HTTP_AUTHORIZATION
-    # Warning: it doesn't happen in tests but it's useful, do not remove!
+    
     auth_header = {}
     if 'Authorization' in request.headers:
         auth_header = {'Authorization': request.headers['Authorization']}
-    #no needed for GAE
-    #elif 'HTTP_AUTHORIZATION' in request.META:
-    #    auth_header =  {'Authorization': request.META['HTTP_AUTHORIZATION']}
 
     parameters = dict([(argument_name,request.get(argument_name)) for argument_name in request.arguments()])
-    #parameters = dict(request.REQUEST.items())
     oauth_request = oauth.OAuthRequest.from_request(request.method, 
                                               request.url, 
                                               headers=request.headers,
@@ -34,13 +33,11 @@ def initialize_server_request(request):
     return oauth_server, oauth_request
 
 
-def send_oauth_error(err=None):
+def send_oauth_error(err,response):
     """Shortcut for sending an error."""
-    # send a 401 error
-    response = HttpResponse(err.message.encode('utf-8'), mimetype="text/plain")
-    response.status_code = 401
-    # return the authenticate header
-    header = build_authenticate_header(realm=OAUTH_REALM_KEY_NAME)
+    response.clear()
+    response.set_status(401, str(err.message))
+    header = oauth.build_authenticate_header(realm=OAUTH_REALM_KEY_NAME)
     for k, v in header.iteritems():
-        response[k] = v
-    return response
+       response.headers.add_header(k, v)
+    
