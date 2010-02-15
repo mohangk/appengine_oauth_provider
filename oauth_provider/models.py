@@ -85,15 +85,19 @@ class Token(db.Model):
     def to_string(self, only_key=False):
         token_dict = {
             'oauth_token': self.key_, 
-            'oauth_token_secret': self.secret,
-            'oauth_callback_confirmed': 'true',
+            'oauth_token_secret': self.secret
         }
+        
+        if self.callback_confirmed:
+            token_dict.update({'oauth_callback_confirmed': 'true'})
+        
         if self.verifier:
             token_dict.update({ 'oauth_verifier': self.verifier })
 
         if only_key:
             del token_dict['oauth_token_secret']
-            del token_dict['oauth_callback_confirmed']
+            if token_dict.has_key('oauth_callback_confirmed'):
+                del token_dict['oauth_callback_confirmed']
 
         return urllib.urlencode(token_dict)
 

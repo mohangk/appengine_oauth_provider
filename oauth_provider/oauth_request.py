@@ -1,6 +1,6 @@
 import logging
 
-from google.appengine.ext.webapp import RequestHandler
+from google.appengine.ext import webapp
 from google.appengine.api import users
 
 import oauth
@@ -18,7 +18,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-class OAuthRequestHandler(RequestHandler):
+class OAuthRequestHandler(webapp.RequestHandler):
     """HTTP request handler with OAuth support."""
     def get(self, *args):
         logger.warning("!!!START REQUEST!!!")
@@ -39,7 +39,6 @@ class OAuthRequestHandler(RequestHandler):
                 # create a request token
                 token = oauth_server.fetch_request_token(oauth_request)
                 # return the token
-                #response = HttpResponse(token.to_string(), mimetype="text/plain")
                 self.response.set_status(200, 'OK')
                 self.response.out.write(token.to_string())
             except oauth.OAuthError, err:
@@ -109,9 +108,27 @@ class OAuthRequestHandler(RequestHandler):
                         self.response.out.write("Successfully authorised : %s"%token.to_string(only_key=True))
                 else:
                     logger.warning("!!!User not logged in - fwd to login page ")
-                    #should put up some screen explaining what this 
+                    
+                    #handle the fact that this might be a POST request and the 
+                    #required oauth_token (and possibly oauth_callback for
+                    # OAuth 1.0 requests) will not be on the request.uri
+                    #Hence we add it to it before redirecting to the login page
+                    
+                    request_uri = self.request.uri
+                    
+                    if 'oauth_token' not in request_uri and '?' not in request_uri:
+                        request_uri = '%s?%s' % (request_uri,token.to_string(only_key=True))
+                    elif 'oauth_token' not in request_uri and '?' in request_uri:
+                        request_uri = '%s&%s' % (request_uri,token.to_string(only_key=True))
+
+                    if not token.callback_confirmed and 'oauth_callback' not in request_uri and '?' not in request_uri:
+                        request_uri = '%s?oauth_callback=%s' % (request_uri,callback)
+                    elif not token.callback_confirmed and 'oauth_callback' not in request_uri and '?' in request_uri:
+                        request_uri = '%s&oauth_callback=%s' % (request_uri,callback)
+                        
+                    #TODO: put up some screen explaining what this 
                     #authentication is for before forwarding to login box
-                    self.redirect(users.create_login_url(self.request.uri))
+                    self.redirect(users.create_login_url(request_uri))
             
             except oauth.OAuthError, err:
                 logger.exception("Error when trying to do an authorization")
@@ -159,3 +176,14 @@ class OAuthRequestHandler(RequestHandler):
     def delete(self, *args):
       """Handler method for OAuth DELETE requests."""
       self.error(405)
+      
+def application():
+    url_mappings = [
+        ('/request_token',OAuthRequestHandler),
+        ('/access_token', OAuthRequestHandler),
+        ('/authorize', OAuthRequestHandler)
+    ]
+    return webapp.WSGIApplication(url_mappings, debug=True)
+
+      
+

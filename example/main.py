@@ -1,17 +1,12 @@
-#!/usr/bin/env python
-
-
 import wsgiref.handlers
 from google.appengine.ext import webapp
-import django.utils.simplejson as simplejson
-from oauth_provider import oauth_request
 
+from oauth_provider import oauth_request
 from oauth_provider.decorators import oauth_required
 
 import logging
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-
 
 class TomboyApiPublicHandler(webapp.RequestHandler):
     def get(self):

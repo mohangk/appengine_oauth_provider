@@ -40,4 +40,5 @@ def send_oauth_error(err,response):
     header = oauth.build_authenticate_header(realm=OAUTH_REALM_KEY_NAME)
     for k, v in header.iteritems():
        response.headers.add_header(k, v)
+    response.out.write(err.message.encode('utf-8'))
     
