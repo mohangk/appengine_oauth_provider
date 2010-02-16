@@ -16,7 +16,7 @@ class Nonce(db.Model):
     token_key = db.StringProperty()
     consumer_key = db.StringProperty()
     key_ = db.StringProperty()
-    
+        
     def __unicode__(self):
         return u"Nonce %s for %s" % (self.key, self.consumer_key)
 

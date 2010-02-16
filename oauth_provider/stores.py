@@ -63,7 +63,7 @@ class GAEOAuthDataStore(oauth.OAuthDataStore):
         if oauth_token is None:
             return None
         
-        logger.warning("!!! In GAEOAuthDataStore.lookup_nonce  key_:%s, consumer_key: %s, token_key:%s"%(nonce,oauth_consumer.key,oauth_token.key))
+        logger.warning("!!! In GAEOAuthDataStore.lookup_nonce  key_:%s, consumer_key: %s, token_key:%s"%(nonce,oauth_consumer.key_,oauth_token.key_))
         
         nonces = Nonce.all()\
             .filter('consumer_key =',oauth_consumer.key_)\
@@ -72,7 +72,7 @@ class GAEOAuthDataStore(oauth.OAuthDataStore):
         
         if len(nonces) == 1:
             nonce = nonces[0]
-            return nonce.key
+            return nonce.key_
         elif len(nonces) == 0:
             #create a nonce
             nonce_obj = Nonce(consumer_key=oauth_consumer.key_, 
@@ -81,7 +81,7 @@ class GAEOAuthDataStore(oauth.OAuthDataStore):
             nonce_obj.put()
             return None
         else:
-            raise Exception('More then nonce matches consumer_key "%s", \
+            raise Exception('More then one nonce matches consumer_key "%s", \
                 token_key "%s", key_ "%S"'%(oauth_consumer.key,oauth_token.key, nonce))
 
 
@@ -136,7 +136,7 @@ class GAEOAuthDataStore(oauth.OAuthDataStore):
                                                                user=self.request_token.user,
                                                                resource=self.request_token.resource)
                 return self.access_token
-        raise OAuthError('Consumer key or token key does not match. ' \
+        raise oauth.OAuthError('Consumer key or token key does not match. ' \
                         +'Make sure your request token is approved. ' \
                         +'Check your verifier too if you use OAuth 1.0a.')
         

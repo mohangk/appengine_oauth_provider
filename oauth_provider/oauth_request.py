@@ -7,6 +7,8 @@ import oauth
 
 from stores import check_valid_callback
 from utils import initialize_server_request, send_oauth_error
+from decorators import oauth_required
+
 
 REQUEST_TOKEN_URL = '/request_token'
 ACCESS_TOKEN_URL = '/access_token'
@@ -50,6 +52,13 @@ class OAuthRequestHandler(webapp.RequestHandler):
 
 
         # user authorization
+        
+        #TODO: put up a screen explaining what this authorization is for before
+        #approving the request_token, and allowing the user to decide if they 
+        #want to proceed- now it just approves right away. If the user rejects
+        #the approval , redirect to the callback with an error parameter
+        
+        
         if self.request.path.startswith(AUTHORIZATION_URL):
             logger.warning("!!!Entering AUTHORIZATION_URL")
             # get the request token
@@ -126,8 +135,7 @@ class OAuthRequestHandler(webapp.RequestHandler):
                     elif not token.callback_confirmed and 'oauth_callback' not in request_uri and '?' in request_uri:
                         request_uri = '%s&oauth_callback=%s' % (request_uri,callback)
                         
-                    #TODO: put up some screen explaining what this 
-                    #authentication is for before forwarding to login box
+                  
                     self.redirect(users.create_login_url(request_uri))
             
             except oauth.OAuthError, err:
@@ -177,11 +185,23 @@ class OAuthRequestHandler(webapp.RequestHandler):
       """Handler method for OAuth DELETE requests."""
       self.error(405)
       
+
+class ProtectedResource(webapp.RequestHandler):
+    @oauth_required  
+    def get(self):
+        self.response.out.write('Protected Resource access!')
+        return
+    
+    def post(self, *args):
+        """Handler method for OAuth POST requests."""
+        return self.get()
+      
 def application():
     url_mappings = [
         ('/request_token',OAuthRequestHandler),
         ('/access_token', OAuthRequestHandler),
-        ('/authorize', OAuthRequestHandler)
+        ('/authorize', OAuthRequestHandler),
+        ('/protected',ProtectedResource)
     ]
     return webapp.WSGIApplication(url_mappings, debug=True)
 
