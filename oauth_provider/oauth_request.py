@@ -8,7 +8,7 @@ import oauth
 from stores import check_valid_callback
 from utils import initialize_server_request, send_oauth_error
 from decorators import oauth_required
-
+from consts import OUT_OF_BAND
 
 REQUEST_TOKEN_URL = '/request_token'
 ACCESS_TOKEN_URL = '/access_token'
@@ -157,7 +157,7 @@ class OAuthRequestHandler(webapp.RequestHandler):
             try:
                 # create an access token
                 token = oauth_server.fetch_access_token(oauth_request)
-                
+
                 if token == None:
                     logger.warning("!!! oauth_server.fetch_access_token returning None")
                     send_oauth_error(oauth.OAuthError("Cannot find corresponding access token."), self.response)

@@ -122,9 +122,9 @@ class GAEOAuthDataStore(oauth.OAuthDataStore):
 
     def fetch_access_token(self, oauth_consumer, oauth_token, oauth_verifier):
         logger.warning("!!! IN MockOAuthDataStore.fetch_access_token  args: %s"%locals())
-        
-        if oauth_consumer.key == self.consumer.key \
-        and oauth_token.key == self.request_token.key \
+
+        if oauth_consumer.key_ == self.consumer.key_ \
+        and oauth_token.key_ == self.request_token.key_ \
         and self.request_token.is_approved:
             # OAuth 1.0a: if there is a callback confirmed, check the verifier
             if (self.request_token.callback_confirmed \
