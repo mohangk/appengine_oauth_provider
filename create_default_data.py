@@ -1,5 +1,5 @@
-from models import Resource,Consumer
-from consts import ACCEPTED
+from oauth_provider.models import Resource,Consumer
+from oauth_provider.consts import ACCEPTED
 
 
 

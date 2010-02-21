@@ -11,17 +11,18 @@ logger.setLevel(logging.DEBUG)
 class TomboyApiPublicHandler(webapp.RequestHandler):
     def get(self):
         logger.warning("!!!Start TomboyPublicApi request")
+        hostname = self.request.headers.get('host')
         self.response.out.write("""
               {
                   "user-ref": {
-                       "api-ref" : "http://localhost:8080/api/1.0/sally",
-                       "href" : "http://localhost:8080/sally"
+                       "api-ref" : "http://%s/api/1.0/sally",
+                       "href" : "http://%s/sally"
                   },
-                  "oauth_access_token_url": "http://localhost:8080/access_token", 
+                  "oauth_access_token_url": "http://%s/access_token", 
                   "api-version": "1.0", 
-                  "oauth_request_token_url": "http://localhost:8080/request_token", 
-                  "oauth_authorize_url": "http://localhost:8080/authorize"
-              }""")
+                  "oauth_request_token_url": "http://%s/request_token", 
+                  "oauth_authorize_url": "http://%s/authorize"
+              }"""%(hostname,hostname,hostname,hostname,hostname))
             
         logger.warning("!!!End TomboyApi request")
     
@@ -31,17 +32,18 @@ class TomboyApiPrivateHandler(webapp.RequestHandler):
     @oauth_required  
     def get(self,user):
         logger.warning("!!!Start TomboyPrivateApi request %s"%(user))
+        hostname = self.request.headers.get('host')
         self.response.out.write("""
               {
                   "user-ref": {
-                       "api-ref" : "http://localhost:8080/api/1.0/sally",
-                       "href" : "http://localhost:8080/sally"
+                       "api-ref" : "http://%s/api/1.0/sally",
+                       "href" : "http://%s/sally"
                   },
-                  "oauth_access_token_url": "http://localhost:8080/access_token", 
+                  "oauth_access_token_url": "http://%s/access_token", 
                   "api-version": "1.0", 
-                  "oauth_request_token_url": "http://localhost:8080/request_token", 
-                  "oauth_authorize_url": "http://localhost:8080/authorize"
-              }""")
+                  "oauth_request_token_url": "http://%s/request_token", 
+                  "oauth_authorize_url": "http://%s/authorize"
+              }"""%(hostname,hostname,hostname,hostname,hostname))
             
         logger.warning("!!!End TomboyApi request")
     
