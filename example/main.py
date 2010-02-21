@@ -49,9 +49,9 @@ class TomboyApiPrivateHandler(webapp.RequestHandler):
                 
 
 url_mappings = [
-    ('/request_token',oauth_request.OAuthRequestHandler),
-    ('/access_token', oauth_request.OAuthRequestHandler),
-    ('/authorize', oauth_request.OAuthRequestHandler),    
+    ('/request_token',oauth_request.RequestTokenHandler),
+    ('/access_token', oauth_request.AccessTokenHandler),
+    ('/authorize', oauth_request.AuthorizeHandler),    
     ('/api/1.0/?', TomboyApiPublicHandler),
     ('/api/1.0/(.*)/?', TomboyApiPrivateHandler)
 ]
