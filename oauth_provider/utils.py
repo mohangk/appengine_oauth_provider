@@ -2,11 +2,12 @@ import oauth
 from stores import GAEOAuthDataStore
 from google.appengine.ext.webapp import Response
 
-#to be moved to settings
-OAUTH_SIGNATURE_METHODS = ['plaintext', 'hmac-sha1']
+import config
 
-#to be moved to settings 
-OAUTH_REALM_KEY_NAME = 'http://events.example.net/'
+OAUTH_SIGNATURE_METHODS = getattr(config, 'OAUTH_SIGNATURE_METHODS',['hmac-sha1'])
+
+OAUTH_REALM_KEY_NAME = getattr(config,\
+                            'OAUTH_REALM_KEY_NAME', 'http://realm.example.net/')
 
 def initialize_server_request(request):
     """Shortcut for initialization."""

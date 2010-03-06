@@ -4,9 +4,33 @@ This code is based on the [django-oauth](http://code.welldev.org/django-oauth) p
 
 # Usage 
 
-1. Copy the oauth_provider dir into your GAE application folder. 
-2. Protect the relevant webapp.RequestHandler methods by applying the oauth_required decorator.
+1. Copy the oauth_provider dir into your GAE application folder.
+2. Modify the configuration values within the config.py file that is in the oauth_provider folder.
+3. Add the oauth_request.RequestTokenHandler, oauth_request.AccessTokenHandler and oauth_request.AuthorizeHandler to your apllications url mappings.
 
+For e.g.:
+
+    import oauth_request
+
+    url_mappings = [
+        ('/request_token',oauth_request.RequestTokenHandler),
+	('/access_token', oauth_request.AccessTokenHandler),
+	('/authorize', oauth_request.AuthorizeHandler),    
+	('/api/test/?', ApiHandler)
+    ]
+  
+4. Protect the relevant webapp.RequestHandler methods by applying the oauth_required decorator
+
+For e.g: 
+
+    from oauth_provider.decorators import oauth_required
+
+    class ApiHandler(webapp.RequestHandler):
+        @oauth_required  
+	def get(self,user):
+	    self.response.out.write("hello world!")
+	    return
+ 
 Checkout the example GAE application in the example folder for a clearer explanation.
 
 # Tests
