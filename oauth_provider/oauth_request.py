@@ -1,8 +1,9 @@
 import logging
+import os
 
 from google.appengine.ext import webapp
 from google.appengine.api import users
-
+from google.appengine.ext.webapp import template
 import oauth
 
 from stores import check_valid_callback
@@ -122,19 +123,12 @@ class AuthorizeHandler(webapp.RequestHandler):
                         self.response.set_status(200, 'OK')
                         self.response.out.write("Successfully authorised : %s"%token.to_string(only_key=True))
                 else:
-                    logger.warning("User has not clicked authorize_access")
+                    logger.warning("User has logged in but not authorized_access yet")
                     #display the authorize view
-                    self.response.out.write("""
-                                  <html>
-                                   <form action="" method="post">
-                                   Authorize access to this applications data ?
-                                   <input type="hidden" name="oauth_token" value="%s">
-                                   <input type="radio" name="authorize_access" value="1">Allow <br>
-                                   <input type="radio" name="authorize_access" value="0">Disallow <br>
-                                   <input type="Submit">
-                                   </form>
-                                  </html>
-                                  """%(token.to_string(only_key=True)))
+                    path = os.path.join(os.path.dirname(__file__),'templates',
+                                        'authorize.html')
+                    self.response.out.write(template.render(path,
+                                                            {'token':token}))
             
             else:
                 logger.warning("!!!User not logged in - fwd to login page ")
