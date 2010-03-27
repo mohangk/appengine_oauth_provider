@@ -41,5 +41,4 @@ To run the tests, from within the root folder do the following
 <code>nosetests --with-gae --gae-application=./example/ tests.py 
 </code>
 
-Please note that these tests don't seem to run on the 1.3.1 SDK as of yet, it runs fine on SDK 1.3.0. From what I can tell SDK 1.3.1 breaks compatibility with nose-gae. It is possible to make nose-gae run with an older version by using the --gae-lib-root flag.
 

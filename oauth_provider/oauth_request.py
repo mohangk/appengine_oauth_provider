@@ -95,28 +95,47 @@ class AuthorizeHandler(webapp.RequestHandler):
         logger.warning("!!!Callback : %s"%callback)
         try:
             user = users.get_current_user()
-            
+            logger.warning("!!!User logged in ")
             if user:
-                logger.warning("!!!User logged in - authorize token ")
-                #authorize the token
-                token = oauth_server.authorize_token(token, user)
-                # return the token key
-                args = { 'token': token }
-                if callback:
-                    if "?" in callback:
-                        url_delimiter = "&"
+                if self.request.get('authorize_access'):
+                    if int(self.request.get('authorize_access'))==1:
+                        logger.warning("User has clicked authorize_access")
+                        #check if they want to :s`authorize the token
+                        token = oauth_server.authorize_token(token, user)
+                        # return the token key
+                        args = { 'token': token }
+                    elif int(self.request.get('authorize_access')) == 0:
+                        args = { 'error': _('Access not granted by user.') }
+                    if callback:
+                        if "?" in callback:
+                            url_delimiter = "&"
+                        else:
+                            url_delimiter = "?"
+                        if 'token' in args:
+                            query_args = args['token'].to_string(only_key=True)
+                        else: # access is not authorized i.e. error
+                            query_args = 'error=%s' % args['error']
+                        
+                        logger.warning('Redirecting to: %s%s%s' % (callback, url_delimiter, query_args))
+                        self.redirect(('%s%s%s' % (callback, url_delimiter, query_args)))
                     else:
-                        url_delimiter = "?"
-                    if 'token' in args:
-                        query_args = args['token'].to_string(only_key=True)
-                    else: # access is not authorized i.e. error
-                        query_args = 'error=%s' % args['error']
-                    
-                    logger.warning('Redirecting to: %s%s%s' % (callback, url_delimiter, query_args))
-                    self.redirect(('%s%s%s' % (callback, url_delimiter, query_args)))
+                        self.response.set_status(200, 'OK')
+                        self.response.out.write("Successfully authorised : %s"%token.to_string(only_key=True))
                 else:
-                    self.response.set_status(200, 'OK')
-                    self.response.out.write("Successfully authorised : %s"%token.to_string(only_key=True))
+                    logger.warning("User has not clicked authorize_access")
+                    #display the authorize view
+                    self.response.out.write("""
+                                  <html>
+                                   <form action="" method="post">
+                                   Authorize access to this applications data ?
+                                   <input type="hidden" name="oauth_token" value="%s">
+                                   <input type="radio" name="authorize_access" value="1">Allow <br>
+                                   <input type="radio" name="authorize_access" value="0">Disallow <br>
+                                   <input type="Submit">
+                                   </form>
+                                  </html>
+                                  """%(token.to_string(only_key=True)))
+            
             else:
                 logger.warning("!!!User not logged in - fwd to login page ")
                 
@@ -190,6 +209,28 @@ class AccessTokenHandler(webapp.RequestHandler):
       return self.get()
 
 
+class AuthorizationView(webapp.RequestHandler):
+    """This class provides a basic authorization view that is served up to the
+    user upon logging in, verifying if they indeed do want to authorize the
+    consumer"""
+
+    def get(self):
+        logger.warning("!!!Start TomboyPublicApi request")
+        hostname = self.request.headers.get('host')
+        self.response.out.write("""
+              <html>
+               <form action="" method="post">
+               Authorize access to this applications data ?
+               <input type="Submit">
+               </form>
+              </html>
+              """%(hostname,hostname,hostname,hostname,hostname))
+            
+        logger.warning("!!!End TomboyApi request")
+    
+        return
+
+
 class ProtectedResource(webapp.RequestHandler):
     @oauth_required  
     def get(self):
@@ -201,6 +242,9 @@ class ProtectedResource(webapp.RequestHandler):
         return self.get()
       
 def application():
+    """
+    This is used for tests
+    """
     url_mappings = [
         ('/request_token',RequestTokenHandler),
         ('/access_token', AccessTokenHandler),
