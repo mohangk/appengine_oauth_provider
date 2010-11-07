@@ -114,7 +114,8 @@ def test_oauth1_0():
     """
     parameters = {
         'oauth_token' : token.key_,
-        'oauth_callback' : 'http://test.com/request_token_ready'
+        'oauth_callback' : 'http://test.com/request_token_ready',
+        'authorize_access' : 1,
     }
     
     response = app.post('/authorize', parameters)
@@ -131,12 +132,14 @@ def test_oauth1_0():
     assert token.token_type == Token.REQUEST
     
     #In reality the user would of been redirected to the Google login page and 
-    #then redirected to the authorization url. We simulate the user being logged
-    #in and redirect manually to the authorization page
+    #then redirected to a page where they will be given an opportunity to
+    #authorize the application or otherwise.
     
-    #simulate logged in 
+    #Here we simulate the user being logged (by setting the
+    #os.environ['USER_EMAIL']) variable and the user giving authorizing by
+    #setting the 'authorize_access' parameter
+    #and redirect manually to the authorization page
     os.environ['USER_EMAIL'] = 'mohan@test.com'
-    
     response = app.post('/authorize', parameters)
     
     #verify that the request token is now approved
@@ -416,6 +419,7 @@ def test_oauth1_0a():
     """
     parameters = {
         'oauth_token' : token.key_,
+        'authorize_access' : 1,
     }
     
     
@@ -433,12 +437,14 @@ def test_oauth1_0a():
     assert token.token_type == Token.REQUEST
     
     #In reality the user would of been redirected to the Google login page and 
-    #then redirected to the authorization url. We simulate the user being logged
-    #in and redirect manually to the authorization page
+    #then redirected to a page where they will be given an opportunity to
+    #authorize the application or otherwise.
     
-    #simulate logged in 
+    #Here we simulate the user being logged (by setting the
+    #os.environ['USER_EMAIL']) variable and the user giving authorizing by
+    #setting the 'authorize_access' parameter
+    #and redirect manually to the authorization page
     os.environ['USER_EMAIL'] = 'mohan@test.com'
-    
     response = app.post('/authorize', parameters)
 
     #verify that the request token is now approved

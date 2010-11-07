@@ -634,6 +634,9 @@ class OAuthSignatureMethod_HMAC_SHA1(OAuthSignatureMethod):
         key, raw = self.build_signature_base_string(oauth_request, consumer,
             token)
 
+        if isinstance(key, unicode): 
+            key = str(key)  
+
         # HMAC object.
         try:
             import hashlib # 2.5
